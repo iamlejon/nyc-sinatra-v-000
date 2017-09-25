@@ -1,51 +1,43 @@
 class FiguresController < ApplicationController
 
-  get '/' do
-    erb :index
-  end
-
   get '/figures' do
     @figures = Figure.all
-    erb :'/figures/index'
+    erb :'figures/index'
   end
 
   get '/figures/new' do
-    erb :'/figures/new'
+    @titles = Title.all
+    @landmarks = Landmark.all
+    erb :'figures/new'
   end
 
   get '/figures/:id' do
-    @figure = Figure.find(params[:id])
-    erb :'/figures/edit'
+    @figure = Figure.find_by_id(params[:id])
+    erb :'figures/show'
   end
 
-  post '/figures' do
-       @figure = Figure.create(params["figure"])
-       if !params[:landmark][:name].empty?
-         @figure.landmarks << Landmark.create(params[:landmark])
-       end
+  get '/figures/:id/edit' do
+     @figure = Figure.find(params[:id])
+     erb :'figures/edit'
+   end
 
-       if !params[:title][:name].empty?
-         @figure.titles << Title.create(params[:title])
-       end
-
+   post '/figures' do
+       @figure = Figure.create(params[:figure])
+       @figure.titles << Title.new(name: params[:title][:name]) unless params[:title][:name].empty?
+       @figure.landmarks << Landmark.new(name: params[:landmark][:name]) unless params[:landmark][:name].empty?
        @figure.save
-       redirect to "/figures/#{@figure.id}"
+
+       redirect "/figures/#{@figure.id}"
      end
 
-     post '/figures/:id' do
-       @figure = Figure.find(params[:id])
-       @figure.update(params[:figure])
+     patch '/figures/:id' do
+      @figure = Figure.find_by(params[:id])
+      @figure.update(params[:figure])
+      @figure.titles << Title.new(name: params[:title][:name]) unless params[:title][:name].empty?
+      @figure.landmarks << Landmark.new(name: params[:landmark][:name]) unless params[:landmark][:name].empty?
+      @figure.save
 
-       if !params[:landmark][:name].empty?
-         @figure.landmarks << Landmark.create(params[:landmark])
-       end
+      redirect "figures/#{@figure.id}"
+    end
 
-       if !params[:title][:name].empty?
-         @figure.titles << Title.create(params[:title])
-       end
-
-       @figure.save
-       redirect to "/figures/#{@figure.id}"
-     end
-
- end
+  end
